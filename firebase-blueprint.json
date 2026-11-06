@@ -1,0 +1,641 @@
+{
+  "entities": {
+    "WorkspaceSettings": {
+      "title": "WorkspaceSettings",
+      "description": "Configurable business branding, header titles, and industry preset for the manufacturing workspace.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the business owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "brandName": {
+          "type": "string",
+          "description": "Brand or company wordmark shown in the top bar.",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "workspaceTitle": {
+          "type": "string",
+          "description": "Main configurable application heading shown on the overview dashboard.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "workspaceSubtitle": {
+          "type": "string",
+          "description": "Configurable descriptive subtitle explaining the business operations.",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "industryLabel": {
+          "type": "string",
+          "description": "Industry or business category kicker label.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when settings were last updated."
+        }
+      },
+      "required": [
+        "ownerId",
+        "brandName",
+        "workspaceTitle",
+        "workspaceSubtitle",
+        "industryLabel",
+        "updatedAt"
+      ]
+    },
+    "RawMaterial": {
+      "title": "RawMaterial",
+      "description": "Raw ingredient, material, component, chemical, or packaging item used in product manufacturing.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the business owner who manages this raw material.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the raw material or ingredient.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "sku": {
+          "type": "string",
+          "description": "Internal stock keeping code for the raw material.",
+          "minLength": 1,
+          "maxLength": 40,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "category": {
+          "type": "string",
+          "description": "Material or ingredient classification.",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "unit": {
+          "type": "string",
+          "description": "Base measurement unit for inventory tracking and recipe costing.",
+          "enum": ["kg", "g", "L", "mL", "pcs", "oz", "lb", "gal", "pack"],
+          "minLength": 1,
+          "maxLength": 10
+        },
+        "stockQuantity": {
+          "type": "number",
+          "description": "Current available physical stock quantity in the base unit."
+        },
+        "reorderPoint": {
+          "type": "number",
+          "description": "Minimum stock level before triggering a low-stock restock alert."
+        },
+        "costPerUnit": {
+          "type": "number",
+          "description": "Weighted average or latest purchase cost per single base unit."
+        },
+        "supplierName": {
+          "type": "string",
+          "description": "Primary supplier or vendor name.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "notes": {
+          "type": "string",
+          "description": "Storage handling notes or specification details.",
+          "minLength": 0,
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the raw material record was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the raw material record was last updated."
+        }
+      },
+      "required": [
+        "ownerId",
+        "name",
+        "sku",
+        "category",
+        "unit",
+        "stockQuantity",
+        "reorderPoint",
+        "costPerUnit",
+        "supplierName",
+        "notes",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PurchaseOrder": {
+      "title": "PurchaseOrder",
+      "description": "Record of raw material procurement that replenishes stock and updates weighted unit cost.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the business owner who logged this purchase.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "materialId": {
+          "type": "string",
+          "description": "Document ID of the associated RawMaterial.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "materialName": {
+          "type": "string",
+          "description": "Snapshot name of the raw material purchased.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "supplierName": {
+          "type": "string",
+          "description": "Supplier or distributor for this purchase.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "quantityPurchased": {
+          "type": "number",
+          "description": "Quantity received in the material's base unit."
+        },
+        "unit": {
+          "type": "string",
+          "description": "Base measurement unit of the material.",
+          "enum": ["kg", "g", "L", "mL", "pcs", "oz", "lb", "gal", "pack"],
+          "minLength": 1,
+          "maxLength": 10
+        },
+        "unitCost": {
+          "type": "number",
+          "description": "Purchase price per single base unit for this delivery."
+        },
+        "totalCost": {
+          "type": "number",
+          "description": "Total expenditure for this purchase order."
+        },
+        "batchReference": {
+          "type": "string",
+          "description": "Supplier invoice number or lot code.",
+          "minLength": 1,
+          "maxLength": 60,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the purchase was recorded."
+        }
+      },
+      "required": [
+        "ownerId",
+        "materialId",
+        "materialName",
+        "supplierName",
+        "quantityPurchased",
+        "unit",
+        "unitCost",
+        "totalCost",
+        "batchReference",
+        "createdAt"
+      ]
+    },
+    "Formula": {
+      "title": "Formula",
+      "description": "Master formulation or recipe for a finished product.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the business owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Product formulation name.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "sku": {
+          "type": "string",
+          "description": "Finished product SKU.",
+          "minLength": 1,
+          "maxLength": 40,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "productCategory": {
+          "type": "string",
+          "description": "Finished product line or category.",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "batchYieldUnits": {
+          "type": "number",
+          "description": "Number of finished sellable units produced per 1x standard batch."
+        },
+        "unitLabel": {
+          "type": "string",
+          "description": "Packaging format of a single finished unit (e.g., 1L Bottle, 250g Jar, 12oz Bag).",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "laborCostPerBatch": {
+          "type": "number",
+          "description": "Direct production and packaging labor cost per standard batch."
+        },
+        "overheadCostPerBatch": {
+          "type": "number",
+          "description": "Utilities, equipment, and quality control overhead per standard batch."
+        },
+        "sellingPricePerUnit": {
+          "type": "number",
+          "description": "Target wholesale or retail selling price per finished unit."
+        },
+        "finishedStockUnits": {
+          "type": "number",
+          "description": "Current inventory of finished product units available for sale."
+        },
+        "targetMarginPercent": {
+          "type": "number",
+          "description": "Target gross profit margin percentage for pricing benchmarks."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Production procedure, quality specs, or assembly instructions.",
+          "minLength": 0,
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the formula was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the formula was last updated."
+        }
+      },
+      "required": [
+        "ownerId",
+        "name",
+        "sku",
+        "productCategory",
+        "batchYieldUnits",
+        "unitLabel",
+        "laborCostPerBatch",
+        "overheadCostPerBatch",
+        "sellingPricePerUnit",
+        "finishedStockUnits",
+        "targetMarginPercent",
+        "notes",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "FormulaIngredient": {
+      "title": "FormulaIngredient",
+      "description": "Relational line item linking a Formula to a required RawMaterial and dosage quantity per standard batch.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the business owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "formulaId": {
+          "type": "string",
+          "description": "Document ID of the parent Formula.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "materialId": {
+          "type": "string",
+          "description": "Document ID of the required RawMaterial.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "materialName": {
+          "type": "string",
+          "description": "Display name of the raw material.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "quantityRequired": {
+          "type": "number",
+          "description": "Quantity of the raw material required for a 1x standard batch."
+        },
+        "unit": {
+          "type": "string",
+          "description": "Measurement unit matching the raw material.",
+          "enum": ["kg", "g", "L", "mL", "pcs", "oz", "lb", "gal", "pack"],
+          "minLength": 1,
+          "maxLength": 10
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the ingredient line was added."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the ingredient line was updated."
+        }
+      },
+      "required": [
+        "ownerId",
+        "formulaId",
+        "materialId",
+        "materialName",
+        "quantityRequired",
+        "unit",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ProductionBatch": {
+      "title": "ProductionBatch",
+      "description": "Executed production run that consumes raw materials, increments finished goods, and locks historical cost and profit margin metrics.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the business owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "formulaId": {
+          "type": "string",
+          "description": "Document ID of the Formula used for this batch.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "formulaName": {
+          "type": "string",
+          "description": "Snapshot name of the product formula.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "productCategory": {
+          "type": "string",
+          "description": "Product category of the batch.",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "batchCode": {
+          "type": "string",
+          "description": "Unique production lot identifier.",
+          "minLength": 1,
+          "maxLength": 40,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "batchMultiplier": {
+          "type": "number",
+          "description": "Scale factor applied to the standard formula batch (e.g., 1, 2, 0.5)."
+        },
+        "unitsProduced": {
+          "type": "number",
+          "description": "Total finished sellable units produced in this batch."
+        },
+        "unitLabel": {
+          "type": "string",
+          "description": "Packaging format of the finished units.",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "rawMaterialCost": {
+          "type": "number",
+          "description": "Total cost of raw materials and packaging consumed in this batch."
+        },
+        "laborCost": {
+          "type": "number",
+          "description": "Total direct labor cost allocated to this batch."
+        },
+        "overheadCost": {
+          "type": "number",
+          "description": "Total manufacturing overhead allocated to this batch."
+        },
+        "totalProductionCost": {
+          "type": "number",
+          "description": "Combined raw material, labor, and overhead cost for the batch."
+        },
+        "costPerUnit": {
+          "type": "number",
+          "description": "Calculated all-in manufacturing cost per single finished unit."
+        },
+        "sellingPricePerUnit": {
+          "type": "number",
+          "description": "Unit selling price at the time of batch execution."
+        },
+        "projectedRevenue": {
+          "type": "number",
+          "description": "Total expected revenue from selling all units in the batch."
+        },
+        "projectedProfit": {
+          "type": "number",
+          "description": "Total expected gross profit (projectedRevenue - totalProductionCost)."
+        },
+        "profitMarginPercent": {
+          "type": "number",
+          "description": "Gross profit margin percentage ((projectedProfit / projectedRevenue) * 100)."
+        },
+        "status": {
+          "type": "string",
+          "description": "Lifecycle status of the production batch (completed and cancelled are terminal).",
+          "enum": ["in_progress", "completed", "cancelled"],
+          "minLength": 1,
+          "maxLength": 20
+        },
+        "notes": {
+          "type": "string",
+          "description": "Quality control observations or batch notes.",
+          "minLength": 0,
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the batch was started."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the batch was last updated."
+        }
+      },
+      "required": [
+        "ownerId",
+        "formulaId",
+        "formulaName",
+        "productCategory",
+        "batchCode",
+        "batchMultiplier",
+        "unitsProduced",
+        "unitLabel",
+        "rawMaterialCost",
+        "laborCost",
+        "overheadCost",
+        "totalProductionCost",
+        "costPerUnit",
+        "sellingPricePerUnit",
+        "projectedRevenue",
+        "projectedProfit",
+        "profitMarginPercent",
+        "status",
+        "notes",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ProductSale": {
+      "title": "ProductSale",
+      "description": "Recorded customer sale or shipment of finished product units that deducts finished stock and logs realized revenue, cost of goods sold, and net profit.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the business owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "formulaId": {
+          "type": "string",
+          "description": "Document ID of the Formula sold.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "formulaName": {
+          "type": "string",
+          "description": "Snapshot name of the product sold.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "productCategory": {
+          "type": "string",
+          "description": "Product category of the item sold.",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "customerName": {
+          "type": "string",
+          "description": "Customer name, store name, or order reference.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "quantitySold": {
+          "type": "number",
+          "description": "Number of finished units sold in this transaction."
+        },
+        "unitLabel": {
+          "type": "string",
+          "description": "Packaging format of the finished units (e.g., 1L Bottle).",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "sellingPricePerUnit": {
+          "type": "number",
+          "description": "Actual unit selling price charged to the customer."
+        },
+        "costPerUnit": {
+          "type": "number",
+          "description": "Unit manufacturing cost at the time of sale."
+        },
+        "totalRevenue": {
+          "type": "number",
+          "description": "Total cash/sales revenue collected (quantitySold * sellingPricePerUnit)."
+        },
+        "totalCost": {
+          "type": "number",
+          "description": "Total manufacturing cost of the units sold (quantitySold * costPerUnit)."
+        },
+        "totalProfit": {
+          "type": "number",
+          "description": "Total realized profit earned on this sale (totalRevenue - totalCost)."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional payment method, delivery note, or invoice detail.",
+          "minLength": 0,
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the sale was recorded."
+        }
+      },
+      "required": [
+        "ownerId",
+        "formulaId",
+        "formulaName",
+        "productCategory",
+        "customerName",
+        "quantitySold",
+        "unitLabel",
+        "sellingPricePerUnit",
+        "costPerUnit",
+        "totalRevenue",
+        "totalCost",
+        "totalProfit",
+        "notes",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/workspaceSettings/{settingId}": {
+      "schema": { "$ref": "#/entities/WorkspaceSettings" },
+      "description": "Stores configurable application title, brand wordmark, and industry labels per user."
+    },
+    "/rawMaterials/{materialId}": {
+      "schema": { "$ref": "#/entities/RawMaterial" },
+      "description": "Stores raw materials, ingredients, components, and packaging inventory owned by a user."
+    },
+    "/purchaseOrders/{purchaseId}": {
+      "schema": { "$ref": "#/entities/PurchaseOrder" },
+      "description": "Immutable procurement ledger recording raw material restocks and purchase prices."
+    },
+    "/formulas/{formulaId}": {
+      "schema": { "$ref": "#/entities/Formula" },
+      "description": "Stores master product formulations/recipes, yield parameters, labor/overhead costs, selling prices, and finished stock."
+    },
+    "/formulaIngredients/{ingredientId}": {
+      "schema": { "$ref": "#/entities/FormulaIngredient" },
+      "description": "Stores individual raw material dosage requirements per product formula."
+    },
+    "/productionBatches/{batchId}": {
+      "schema": { "$ref": "#/entities/ProductionBatch" },
+      "description": "Stores production batch runs, cost breakdowns, unit economics, and profit margins."
+    },
+    "/productSales/{saleId}": {
+      "schema": { "$ref": "#/entities/ProductSale" },
+      "description": "Stores customer sales transactions, units sold, cash collected, and realized profit."
+    }
+  }
+}

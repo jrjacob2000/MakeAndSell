@@ -1,0 +1,6 @@
+{
+  "name": "FormuLab — Chemical Manufacturing, Inventory & Margin Ledger",
+  "description": "Production formulation, raw chemical inventory, batch costing, and profit margin analytics for household chemical manufacturers.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

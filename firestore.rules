@@ -1,0 +1,717 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net (Default-Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Hardened Global Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isNumber(val) {
+      return val is int || val is float;
+    }
+
+    function isValidUnit(unit) {
+      return unit is string &&
+        unit.size() >= 1 &&
+        unit.size() <= 10 &&
+        unit in ['kg', 'g', 'L', 'mL', 'pcs', 'oz', 'lb', 'gal', 'pack'];
+    }
+
+    function isValidMaterialCategory(cat) {
+      return cat is string &&
+        cat.size() >= 1 &&
+        cat.size() <= 60;
+    }
+
+    function isValidProductCategory(cat) {
+      return cat is string &&
+        cat.size() >= 1 &&
+        cat.size() <= 60;
+    }
+
+    // 3. Entity Validation Blueprints (Synchronized with firebase-blueprint.json)
+    function isValidWorkspaceSettings(data) {
+      return data.keys().hasAll([
+          'ownerId',
+          'brandName',
+          'workspaceTitle',
+          'workspaceSubtitle',
+          'industryLabel',
+          'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId',
+          'brandName',
+          'workspaceTitle',
+          'workspaceSubtitle',
+          'industryLabel',
+          'updatedAt'
+        ]) &&
+        data.ownerId is string &&
+        data.ownerId.size() >= 1 &&
+        data.ownerId.size() <= 128 &&
+        data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.ownerId == request.auth.uid &&
+        data.brandName is string &&
+        data.brandName.size() >= 1 &&
+        data.brandName.size() <= 60 &&
+        data.workspaceTitle is string &&
+        data.workspaceTitle.size() >= 1 &&
+        data.workspaceTitle.size() <= 120 &&
+        data.workspaceSubtitle is string &&
+        data.workspaceSubtitle.size() >= 1 &&
+        data.workspaceSubtitle.size() <= 300 &&
+        data.industryLabel is string &&
+        data.industryLabel.size() >= 1 &&
+        data.industryLabel.size() <= 80 &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidRawMaterial(data) {
+      return data.keys().hasAll([
+          'ownerId',
+          'name',
+          'sku',
+          'category',
+          'unit',
+          'stockQuantity',
+          'reorderPoint',
+          'costPerUnit',
+          'supplierName',
+          'notes',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId',
+          'name',
+          'sku',
+          'category',
+          'unit',
+          'stockQuantity',
+          'reorderPoint',
+          'costPerUnit',
+          'supplierName',
+          'notes',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.ownerId is string &&
+        data.ownerId.size() >= 1 &&
+        data.ownerId.size() <= 128 &&
+        data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.ownerId == request.auth.uid &&
+        data.name is string &&
+        data.name.size() >= 1 &&
+        data.name.size() <= 120 &&
+        data.sku is string &&
+        data.sku.size() >= 1 &&
+        data.sku.size() <= 40 &&
+        data.sku.matches('^[a-zA-Z0-9_\\-]+$') &&
+        isValidMaterialCategory(data.category) &&
+        isValidUnit(data.unit) &&
+        isNumber(data.stockQuantity) &&
+        data.stockQuantity >= 0 &&
+        data.stockQuantity <= 100000000 &&
+        isNumber(data.reorderPoint) &&
+        data.reorderPoint >= 0 &&
+        data.reorderPoint <= 100000000 &&
+        isNumber(data.costPerUnit) &&
+        data.costPerUnit >= 0 &&
+        data.costPerUnit <= 10000000 &&
+        data.supplierName is string &&
+        data.supplierName.size() >= 1 &&
+        data.supplierName.size() <= 120 &&
+        data.notes is string &&
+        data.notes.size() >= 0 &&
+        data.notes.size() <= 500 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidPurchaseOrder(data) {
+      return data.keys().hasAll([
+          'ownerId',
+          'materialId',
+          'materialName',
+          'supplierName',
+          'quantityPurchased',
+          'unit',
+          'unitCost',
+          'totalCost',
+          'batchReference',
+          'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId',
+          'materialId',
+          'materialName',
+          'supplierName',
+          'quantityPurchased',
+          'unit',
+          'unitCost',
+          'totalCost',
+          'batchReference',
+          'createdAt'
+        ]) &&
+        data.ownerId is string &&
+        data.ownerId.size() >= 1 &&
+        data.ownerId.size() <= 128 &&
+        data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.ownerId == request.auth.uid &&
+        data.materialId is string &&
+        data.materialId.size() >= 1 &&
+        data.materialId.size() <= 128 &&
+        data.materialId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.materialName is string &&
+        data.materialName.size() >= 1 &&
+        data.materialName.size() <= 120 &&
+        data.supplierName is string &&
+        data.supplierName.size() >= 1 &&
+        data.supplierName.size() <= 120 &&
+        isNumber(data.quantityPurchased) &&
+        data.quantityPurchased > 0 &&
+        data.quantityPurchased <= 100000000 &&
+        isValidUnit(data.unit) &&
+        isNumber(data.unitCost) &&
+        data.unitCost >= 0 &&
+        data.unitCost <= 10000000 &&
+        isNumber(data.totalCost) &&
+        data.totalCost >= 0 &&
+        data.totalCost <= 1000000000 &&
+        data.batchReference is string &&
+        data.batchReference.size() >= 1 &&
+        data.batchReference.size() <= 60 &&
+        data.batchReference.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidFormula(data) {
+      return data.keys().hasAll([
+          'ownerId',
+          'name',
+          'sku',
+          'productCategory',
+          'batchYieldUnits',
+          'unitLabel',
+          'laborCostPerBatch',
+          'overheadCostPerBatch',
+          'sellingPricePerUnit',
+          'finishedStockUnits',
+          'targetMarginPercent',
+          'notes',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId',
+          'name',
+          'sku',
+          'productCategory',
+          'batchYieldUnits',
+          'unitLabel',
+          'laborCostPerBatch',
+          'overheadCostPerBatch',
+          'sellingPricePerUnit',
+          'finishedStockUnits',
+          'targetMarginPercent',
+          'notes',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.ownerId is string &&
+        data.ownerId.size() >= 1 &&
+        data.ownerId.size() <= 128 &&
+        data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.ownerId == request.auth.uid &&
+        data.name is string &&
+        data.name.size() >= 1 &&
+        data.name.size() <= 120 &&
+        data.sku is string &&
+        data.sku.size() >= 1 &&
+        data.sku.size() <= 40 &&
+        data.sku.matches('^[a-zA-Z0-9_\\-]+$') &&
+        isValidProductCategory(data.productCategory) &&
+        isNumber(data.batchYieldUnits) &&
+        data.batchYieldUnits > 0 &&
+        data.batchYieldUnits <= 10000000 &&
+        data.unitLabel is string &&
+        data.unitLabel.size() >= 1 &&
+        data.unitLabel.size() <= 40 &&
+        isNumber(data.laborCostPerBatch) &&
+        data.laborCostPerBatch >= 0 &&
+        data.laborCostPerBatch <= 10000000 &&
+        isNumber(data.overheadCostPerBatch) &&
+        data.overheadCostPerBatch >= 0 &&
+        data.overheadCostPerBatch <= 10000000 &&
+        isNumber(data.sellingPricePerUnit) &&
+        data.sellingPricePerUnit >= 0 &&
+        data.sellingPricePerUnit <= 10000000 &&
+        isNumber(data.finishedStockUnits) &&
+        data.finishedStockUnits >= 0 &&
+        data.finishedStockUnits <= 100000000 &&
+        isNumber(data.targetMarginPercent) &&
+        data.targetMarginPercent >= 0 &&
+        data.targetMarginPercent <= 100 &&
+        data.notes is string &&
+        data.notes.size() >= 0 &&
+        data.notes.size() <= 500 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidFormulaIngredient(data) {
+      return data.keys().hasAll([
+          'ownerId',
+          'formulaId',
+          'materialId',
+          'materialName',
+          'quantityRequired',
+          'unit',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId',
+          'formulaId',
+          'materialId',
+          'materialName',
+          'quantityRequired',
+          'unit',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.ownerId is string &&
+        data.ownerId.size() >= 1 &&
+        data.ownerId.size() <= 128 &&
+        data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.ownerId == request.auth.uid &&
+        data.formulaId is string &&
+        data.formulaId.size() >= 1 &&
+        data.formulaId.size() <= 128 &&
+        data.formulaId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.materialId is string &&
+        data.materialId.size() >= 1 &&
+        data.materialId.size() <= 128 &&
+        data.materialId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.materialName is string &&
+        data.materialName.size() >= 1 &&
+        data.materialName.size() <= 120 &&
+        isNumber(data.quantityRequired) &&
+        data.quantityRequired > 0 &&
+        data.quantityRequired <= 10000000 &&
+        isValidUnit(data.unit) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidProductionBatch(data) {
+      return data.keys().hasAll([
+          'ownerId',
+          'formulaId',
+          'formulaName',
+          'productCategory',
+          'batchCode',
+          'batchMultiplier',
+          'unitsProduced',
+          'unitLabel',
+          'rawMaterialCost',
+          'laborCost',
+          'overheadCost',
+          'totalProductionCost',
+          'costPerUnit',
+          'sellingPricePerUnit',
+          'projectedRevenue',
+          'projectedProfit',
+          'profitMarginPercent',
+          'status',
+          'notes',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId',
+          'formulaId',
+          'formulaName',
+          'productCategory',
+          'batchCode',
+          'batchMultiplier',
+          'unitsProduced',
+          'unitLabel',
+          'rawMaterialCost',
+          'laborCost',
+          'overheadCost',
+          'totalProductionCost',
+          'costPerUnit',
+          'sellingPricePerUnit',
+          'projectedRevenue',
+          'projectedProfit',
+          'profitMarginPercent',
+          'status',
+          'notes',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.ownerId is string &&
+        data.ownerId.size() >= 1 &&
+        data.ownerId.size() <= 128 &&
+        data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.ownerId == request.auth.uid &&
+        data.formulaId is string &&
+        data.formulaId.size() >= 1 &&
+        data.formulaId.size() <= 128 &&
+        data.formulaId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.formulaName is string &&
+        data.formulaName.size() >= 1 &&
+        data.formulaName.size() <= 120 &&
+        isValidProductCategory(data.productCategory) &&
+        data.batchCode is string &&
+        data.batchCode.size() >= 1 &&
+        data.batchCode.size() <= 40 &&
+        data.batchCode.matches('^[a-zA-Z0-9_\\-]+$') &&
+        isNumber(data.batchMultiplier) &&
+        data.batchMultiplier > 0 &&
+        data.batchMultiplier <= 10000 &&
+        isNumber(data.unitsProduced) &&
+        data.unitsProduced > 0 &&
+        data.unitsProduced <= 100000000 &&
+        data.unitLabel is string &&
+        data.unitLabel.size() >= 1 &&
+        data.unitLabel.size() <= 40 &&
+        isNumber(data.rawMaterialCost) &&
+        data.rawMaterialCost >= 0 &&
+        data.rawMaterialCost <= 1000000000 &&
+        isNumber(data.laborCost) &&
+        data.laborCost >= 0 &&
+        data.laborCost <= 1000000000 &&
+        isNumber(data.overheadCost) &&
+        data.overheadCost >= 0 &&
+        data.overheadCost <= 1000000000 &&
+        isNumber(data.totalProductionCost) &&
+        data.totalProductionCost >= 0 &&
+        data.totalProductionCost <= 1000000000 &&
+        isNumber(data.costPerUnit) &&
+        data.costPerUnit >= 0 &&
+        data.costPerUnit <= 100000000 &&
+        isNumber(data.sellingPricePerUnit) &&
+        data.sellingPricePerUnit >= 0 &&
+        data.sellingPricePerUnit <= 100000000 &&
+        isNumber(data.projectedRevenue) &&
+        data.projectedRevenue >= 0 &&
+        data.projectedRevenue <= 1000000000 &&
+        isNumber(data.projectedProfit) &&
+        data.projectedProfit >= -1000000000 &&
+        data.projectedProfit <= 1000000000 &&
+        isNumber(data.profitMarginPercent) &&
+        data.profitMarginPercent >= -10000 &&
+        data.profitMarginPercent <= 100 &&
+        data.status is string &&
+        data.status.size() >= 1 &&
+        data.status.size() <= 20 &&
+        data.status in ['in_progress', 'completed', 'cancelled'] &&
+        data.notes is string &&
+        data.notes.size() >= 0 &&
+        data.notes.size() <= 500 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidProductSale(data) {
+      return data.keys().hasAll([
+          'ownerId',
+          'formulaId',
+          'formulaName',
+          'productCategory',
+          'customerName',
+          'quantitySold',
+          'unitLabel',
+          'sellingPricePerUnit',
+          'costPerUnit',
+          'totalRevenue',
+          'totalCost',
+          'totalProfit',
+          'notes',
+          'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId',
+          'formulaId',
+          'formulaName',
+          'productCategory',
+          'customerName',
+          'quantitySold',
+          'unitLabel',
+          'sellingPricePerUnit',
+          'costPerUnit',
+          'totalRevenue',
+          'totalCost',
+          'totalProfit',
+          'notes',
+          'createdAt'
+        ]) &&
+        data.ownerId is string &&
+        data.ownerId.size() >= 1 &&
+        data.ownerId.size() <= 128 &&
+        data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.ownerId == request.auth.uid &&
+        data.formulaId is string &&
+        data.formulaId.size() >= 1 &&
+        data.formulaId.size() <= 128 &&
+        data.formulaId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.formulaName is string &&
+        data.formulaName.size() >= 1 &&
+        data.formulaName.size() <= 120 &&
+        isValidProductCategory(data.productCategory) &&
+        data.customerName is string &&
+        data.customerName.size() >= 1 &&
+        data.customerName.size() <= 120 &&
+        isNumber(data.quantitySold) &&
+        data.quantitySold > 0 &&
+        data.quantitySold <= 100000000 &&
+        data.unitLabel is string &&
+        data.unitLabel.size() >= 1 &&
+        data.unitLabel.size() <= 40 &&
+        isNumber(data.sellingPricePerUnit) &&
+        data.sellingPricePerUnit >= 0 &&
+        data.sellingPricePerUnit <= 100000000 &&
+        isNumber(data.costPerUnit) &&
+        data.costPerUnit >= 0 &&
+        data.costPerUnit <= 100000000 &&
+        isNumber(data.totalRevenue) &&
+        data.totalRevenue >= 0 &&
+        data.totalRevenue <= 1000000000 &&
+        isNumber(data.totalCost) &&
+        data.totalCost >= 0 &&
+        data.totalCost <= 1000000000 &&
+        isNumber(data.totalProfit) &&
+        data.totalProfit >= -1000000000 &&
+        data.totalProfit <= 1000000000 &&
+        data.notes is string &&
+        data.notes.size() >= 0 &&
+        data.notes.size() <= 500 &&
+        data.createdAt is timestamp;
+    }
+
+    // 4. Collection Match Blocks
+    match /workspaceSettings/{settingId} {
+      allow get: if isSignedIn() && isValidId(settingId) && settingId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+
+      allow create: if isVerifiedUser() &&
+        isValidId(settingId) &&
+        settingId == request.auth.uid &&
+        isValidWorkspaceSettings(incoming()) &&
+        incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedUser() &&
+        isValidId(settingId) &&
+        settingId == request.auth.uid &&
+        isValidWorkspaceSettings(incoming()) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'brandName',
+          'workspaceTitle',
+          'workspaceSubtitle',
+          'industryLabel',
+          'updatedAt'
+        ]);
+
+      allow delete: if isVerifiedUser() && isValidId(settingId) && settingId == request.auth.uid;
+    }
+
+    match /rawMaterials/{materialId} {
+      allow get: if isSignedIn() && isValidId(materialId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+
+      allow create: if isVerifiedUser() &&
+        isValidId(materialId) &&
+        isValidRawMaterial(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedUser() &&
+        isValidId(materialId) &&
+        isValidRawMaterial(incoming()) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          // Action 1: Stock & Cost Replenishment / Consumption
+          incoming().diff(existing()).affectedKeys().hasOnly(['stockQuantity', 'costPerUnit', 'updatedAt']) ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['stockQuantity', 'updatedAt']) ||
+          // Action 2: Full Material Specification Edit
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'name',
+            'sku',
+            'category',
+            'unit',
+            'stockQuantity',
+            'reorderPoint',
+            'costPerUnit',
+            'supplierName',
+            'notes',
+            'updatedAt'
+          ])
+        );
+
+      allow delete: if isVerifiedUser() && isValidId(materialId) && existing().ownerId == request.auth.uid;
+    }
+
+    match /purchaseOrders/{purchaseId} {
+      allow get: if isSignedIn() && isValidId(purchaseId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+
+      allow create: if isVerifiedUser() &&
+        isValidId(purchaseId) &&
+        isValidPurchaseOrder(incoming()) &&
+        incoming().createdAt == request.time &&
+        exists(/databases/$(database)/documents/rawMaterials/$(incoming().materialId)) &&
+        get(/databases/$(database)/documents/rawMaterials/$(incoming().materialId)).data.ownerId == request.auth.uid;
+
+      // Purchase orders are immutable financial audit records
+      allow update: if false;
+      allow delete: if isVerifiedUser() && isValidId(purchaseId) && existing().ownerId == request.auth.uid;
+    }
+
+    match /formulas/{formulaId} {
+      allow get: if isSignedIn() && isValidId(formulaId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+
+      allow create: if isVerifiedUser() &&
+        isValidId(formulaId) &&
+        isValidFormula(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedUser() &&
+        isValidId(formulaId) &&
+        isValidFormula(incoming()) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          // Action 1: Finished Goods Stock Adjustment (Batch Completion or Dispatch)
+          incoming().diff(existing()).affectedKeys().hasOnly(['finishedStockUnits', 'updatedAt']) ||
+          // Action 2: Formula & Pricing Specification Update
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'name',
+            'sku',
+            'productCategory',
+            'batchYieldUnits',
+            'unitLabel',
+            'laborCostPerBatch',
+            'overheadCostPerBatch',
+            'sellingPricePerUnit',
+            'finishedStockUnits',
+            'targetMarginPercent',
+            'notes',
+            'updatedAt'
+          ])
+        );
+
+      allow delete: if isVerifiedUser() && isValidId(formulaId) && existing().ownerId == request.auth.uid;
+    }
+
+    match /formulaIngredients/{ingredientId} {
+      allow get: if isSignedIn() && isValidId(ingredientId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+
+      allow create: if isVerifiedUser() &&
+        isValidId(ingredientId) &&
+        isValidFormulaIngredient(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/formulas/$(incoming().formulaId)) &&
+        get(/databases/$(database)/documents/formulas/$(incoming().formulaId)).data.ownerId == request.auth.uid &&
+        exists(/databases/$(database)/documents/rawMaterials/$(incoming().materialId)) &&
+        get(/databases/$(database)/documents/rawMaterials/$(incoming().materialId)).data.ownerId == request.auth.uid;
+
+      allow update: if isVerifiedUser() &&
+        isValidId(ingredientId) &&
+        isValidFormulaIngredient(incoming()) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().formulaId == existing().formulaId &&
+        incoming().materialId == existing().materialId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          // Action: Update Ingredient Dosage or Material Label
+          incoming().diff(existing()).affectedKeys().hasOnly(['quantityRequired', 'materialName', 'unit', 'updatedAt'])
+        );
+
+      allow delete: if isVerifiedUser() && isValidId(ingredientId) && existing().ownerId == request.auth.uid;
+    }
+
+    match /productionBatches/{batchId} {
+      allow get: if isSignedIn() && isValidId(batchId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+
+      allow create: if isVerifiedUser() &&
+        isValidId(batchId) &&
+        isValidProductionBatch(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/formulas/$(incoming().formulaId)) &&
+        get(/databases/$(database)/documents/formulas/$(incoming().formulaId)).data.ownerId == request.auth.uid;
+
+      allow update: if isVerifiedUser() &&
+        isValidId(batchId) &&
+        isValidProductionBatch(incoming()) &&
+        existing().ownerId == request.auth.uid &&
+        // Terminal State Lock: Completed or Cancelled batches cannot be modified
+        existing().status == 'in_progress' &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().formulaId == existing().formulaId &&
+        incoming().batchCode == existing().batchCode &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          // Action: Transition status (e.g. in_progress -> completed or cancelled) and/or update QC notes
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'notes', 'updatedAt']) ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['notes', 'updatedAt'])
+        );
+
+      allow delete: if isVerifiedUser() && isValidId(batchId) && existing().ownerId == request.auth.uid;
+    }
+
+    match /productSales/{saleId} {
+      allow get: if isSignedIn() && isValidId(saleId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+
+      allow create: if isVerifiedUser() &&
+        isValidId(saleId) &&
+        isValidProductSale(incoming()) &&
+        incoming().createdAt == request.time &&
+        exists(/databases/$(database)/documents/formulas/$(incoming().formulaId)) &&
+        get(/databases/$(database)/documents/formulas/$(incoming().formulaId)).data.ownerId == request.auth.uid;
+
+      // Customer sales records are immutable financial audit entries
+      allow update: if false;
+      allow delete: if isVerifiedUser() && isValidId(saleId) && existing().ownerId == request.auth.uid;
+    }
+  }
+}
